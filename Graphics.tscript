@@ -1,0 +1,89 @@
+class GraphicsOutput {
+    public:
+        var block_size = 0;
+        var outline_size = 0;
+
+        constructor() {
+            this.block_size = math.min(canvas.height()/22, canvas.width()/12);
+            this.outline_size = block_size/8;
+        }
+
+        # Block zeichnen an Position pos_x, pos_y mit farbe color
+    function draw_block(pos_x, pos_y, color) {
+     # eingabeparameter:
+     # pos_x: Zelle auf der x Achse der Blocks
+     # pos_y: Zelle auf der y Achse
+     # color: übergebende Farbe als string
+
+     # wir übergeben die Blockkoordinaten als Position im Gitter
+     # um die blöcke zu malen, müssen die Gitterkoordinaten auf
+     # Canvaskoordinaten umgerechnet werden
+     pos_x = pos_x * block_size;
+     pos_y = pos_y * block_size;
+
+     # dark yellow rgb=153,153,0
+     # dunkle Kante
+     canvas.setFillColor(
+         colors[color]["dark"][0]/255,
+         colors[color]["dark"][1]/255,
+         colors[color]["dark"][2]/255,
+         1
+     );
+     canvas.fillRect(pos_x,pos_y,block_size,block_size);
+
+     # light yellow rgb=255,255,0
+     # helle Kante
+     canvas.setFillColor(
+         colors[color]["light"][0]/255,
+         colors[color]["light"][1]/255,
+         colors[color]["light"][2]/255,
+         1
+     );
+
+     canvas.fillArea([[pos_x,pos_y],[pos_x,pos_y+block_size],[pos_x+block_size,pos_y]]);
+
+     # yellow rgb=204,204,0
+     # Hauptfarbe, inneres Quadrat
+     canvas.setFillColor(
+         colors[color]["base"][0]/255,
+         colors[color]["base"][1]/255,
+         colors[color]["base"][2]/255,
+         1
+     );
+     canvas.fillRect(pos_x+outline_size * 0.5,pos_y+outline_size *
+0.5,block_size-outline_size,block_size-outline_size);
+
+}
+
+    function render(playfield, tetromino) {
+         # Füllfarbe auf schwarz setzen und canvas löschen
+         canvas.setFillColor(0,0,0);
+         canvas.clear();
+
+         for var row in 0:playfield.blockmap.size() do {
+             for var column in 0:playfield.blockmap[0].size() do {
+                if (playfield.blockmap[row][column] != 0) then
+                    draw_block(column, row, playfield.blockmap[row][column]);
+            }
+         }
+
+         # wir iterieren durch die blockmap und zeichnen den Tetromino
+         for var row in 0:tetromino.blockmap().size() do {
+             for var column in 0:tetromino.blockmap()[row].size() do {
+                if (tetromino.blockmap()[row][column] != 0) then
+                    draw_block(tetromino.column + column, tetromino.row + row, tetromino.blockmap()[row][column]);
+            }
+         }
+    }
+
+}
+
+
+
+# render erstellt die graphische Ausgabe des Spiels
+# wir setzten den Canvas auf schwarz
+# wir iterieren übers playfield und zeichnen alle statischen Elemente
+# wir zeichnen den übergebenden Tetriomino, der sich in jedem Durchlauf bewegt
+
+
+

@@ -1,0 +1,15 @@
+class Tetromino {
+    public:
+        var column = 3;
+        var row = 0;
+        var rotation = 0;
+        var shape;
+
+        constructor(shape_) {
+            shape = shape_;
+        }
+
+        function blockmap() {
+            return tetrominos[this.shape][this.rotation];
+        }
+}

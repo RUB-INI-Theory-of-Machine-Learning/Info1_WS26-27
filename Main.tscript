@@ -1,0 +1,39 @@
+# alle Files einfügen 
+include "Assets";
+include "Tetromino";
+include "TetrominoPool";
+include "Playfield";
+include "Renderer";
+
+# wir initalisieren unsere Klassen
+var pool = Tetromino_Pool();
+var current_tetromino = Tetromino(pool.get());
+var renderer = Renderer();
+var playfield = Playfield();
+
+while true do {
+     renderer.render(playfield, current_tetromino);
+
+     # wir "bewegen" den Block, indem wir ihn im
+     # nächsten Durchlauf tiefer zeichnen, d.h.
+     # wir verändern die y-Koordinate
+     current_tetromino.row += 1;
+
+     if playfield.check_collision(current_tetromino) == true then {
+         current_tetromino.row -= 1;
+         playfield.insert_tetromino(playfield, current_tetromino);
+         current_tetromino = Tetromino(pool.get());
+     }
+
+     # für eine Bewegung brauchen wir
+     # canvas löschen -> den Block malen -> warten
+     wait(100);
+}
+
+## TODO ##
+  # Zufälliger nächster Tetromino
+  # Code sortieren und aufteilen
+
+  # seitliches bewegen des Blockes
+  # Spielanzeige für den nächsten Block
+  # Volle Reihe wird gelöscht

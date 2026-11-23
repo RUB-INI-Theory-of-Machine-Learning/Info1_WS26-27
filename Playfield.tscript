@@ -1,0 +1,416 @@
+# globale Variable für Farben
+# der string fuer die Farbe wird dem entsprechenden Block zugeordnet
+# z.B. o-Tetromino -> gelb
+
+var colors = {
+		"f": {
+			"base": [119, 119, 119],
+			"light": [153, 153, 153],
+			"dark": [51, 51, 51],
+		},
+		"o": { # yellow
+			"base": [204, 204, 0],
+			"light": [255, 255, 0],
+			"dark": [153, 153, 0],
+		},
+		"t": { # violet
+			"base": [153, 0, 204],
+			"light": [204, 0, 255],
+			"dark": [102, 0, 153],
+		},
+		"s": {
+			"base": [0, 204, 0],
+			"light": [0, 255, 0],
+			"dark": [0, 153, 0],
+		},
+		"z": {
+			"base": [204, 0, 0],
+			"light": [255, 0, 0],
+			"dark": [153, 0, 0],
+		},
+		"j": {
+			"base": [0, 0, 204],
+			"light": [0, 0, 255],
+			"dark": [0, 0, 153],
+		},
+		"l": {
+			"base": [204, 102, 0],
+			"light": [255, 136, 0],
+			"dark": [153, 68, 0],
+		},
+		"i": {
+			"base": [0, 204, 204],
+			"light": [0, 255, 255],
+			"dark": [0, 153, 153],
+		},
+		"n": {
+			"base": [149, 149, 149],
+			"light": [183, 183, 183] ,
+			"dark": [81, 81, 81]
+		}
+	};
+
+var tetrominos = {
+	"o": [[
+            [0,0,0,0],
+            [0,"o","o",0],
+            [0,"o","o",0],
+            [0,0,0,0],
+        ]],
+    "t":[
+            # The first rotation of the tetromino
+            [
+                [ 0,  0,  0, 0 ], # the first row
+                ["t","t","t",0 ], # the second row
+                [ 0, "t", 0, 0 ]  # the third row
+            ],
+            # The other three rotations
+            [[0,"t",0,0],["t","t",0,0],[0,"t",0,0]],
+            [[0,"t",0,0],["t","t","t",0],[0,0,0,0]],
+            [[0,"t",0,0],[0,"t","t",0],[0,"t",0,0]]
+        ],
+     "s":[
+            [[0,0,0,0],[0,"s","s",0],["s","s",0,0]],
+            [["s",0,0,0],["s","s",0,0],[0,"s",0,0]]
+        ],
+    "z":[
+            [[0,0,0,0],["z","z",0,0],[0,"z", "z",0]],
+            [[0,"z",0,0],["z","z",0,0],["z",0,0,0]]
+        ],
+    "j":[
+            [[0,0,0,0],["j","j","j",0],[0,0,"j",0]],
+            [[0,"j",0,0],[0,"j",0,0],["j","j",0,0]],
+            [["j",0,0,0],["j","j","j",0],[0,0,0,0]],
+            [[0,"j","j",0],[0,"j",0,0],[0,"j",0,0]]
+        ],
+    "l":[
+            [[0,0,0,0],["l","l","l",0],["l",0,0,0]],
+            [["l","l",0,0],[0,"l",0,0],[0,"l",0,0]],
+            [[0,0,"l",0],["l","l","l",0],[0,0,0,0]],
+            [[0,"l",0,0],[0,"l",0,0],[0,"l","l",0]]
+        ],
+    "i":[
+            [[0,0,0,0],[0,0,0,0],["i","i","i","i"],[0,0,0,0]],
+            [[0,"i",0,0],[0,"i",0,0],[0,"i",0,0],[0,"i",0,0]],
+        ]
+};
+
+
+# damit das Spielfeld 12 (Breite) x 22 (Höhe) Zellen groß ist
+# nehmen wir die limitierende Größe, die beide Bedingungen erfüllt
+var block_size = math.min(canvas.height()/22, canvas.width()/12);
+
+# wir definieren die Größe des Randes
+var outline_size = block_size/8;
+
+var fontsize = 16;
+
+
+# das playfield bildet das spielfeld ab und
+# enthält alle blöcke die sich NICHT bewegen
+# wir benutzen ein verschachteltes 2d Array der Größe 22 x 12
+# wenn etwas gezeichnet werden soll, ist ein Eintrag nicht null
+# und enthält die Farbe des Blocks
+var playfield = [];
+for 0:22 do playfield.push(Array(12,0));
+# die erste und letzte Reihe sind Rand, dieser wird mit "f" markiert
+# jeweils das erste und letze Element jeder Reihe ist auch Rand
+for var y in 0:22 do {
+        for var x in 0:12 do {
+                if y == 0 or y == 21 then {
+                        playfield[y][x] = "f";
+                }
+                if x == 0 or x == 11 then {
+                        playfield[y][x] = "f";
+                }
+        }
+}
+
+
+# Block zeichnen an Position pos_x, pos_y mit farbe color
+function draw_block(pos_x, pos_y, color) {
+     # eingabeparameter:
+     # pos_x: Zelle auf der x Achse der Blocks
+     # pos_y: Zelle auf der y Achse
+     # color: übergebende Farbe als string
+
+     # wir übergeben die Blockkoordinaten als Position im Gitter
+     # um die blöcke zu malen, müssen die Gitterkoordinaten auf
+     # Canvaskoordinaten umgerechnet werden
+     pos_x = pos_x * block_size;
+     pos_y = pos_y * block_size;
+
+     # dark yellow rgb=153,153,0
+     # dunkle Kante
+     canvas.setFillColor(
+         colors[color]["dark"][0]/255,
+         colors[color]["dark"][1]/255,
+         colors[color]["dark"][2]/255,
+         1
+     );
+     canvas.fillRect(pos_x,pos_y,block_size,block_size);
+
+     # light yellow rgb=255,255,0
+     # helle Kante
+     canvas.setFillColor(
+         colors[color]["light"][0]/255,
+         colors[color]["light"][1]/255,
+         colors[color]["light"][2]/255,
+         1
+     );
+
+     canvas.fillArea([[pos_x,pos_y],[pos_x,pos_y+block_size],[pos_x+block_size,pos_y]]);
+
+     # yellow rgb=204,204,0
+     # Hauptfarbe, inneres Quadrat
+     canvas.setFillColor(
+         colors[color]["base"][0]/255,
+         colors[color]["base"][1]/255,
+         colors[color]["base"][2]/255,
+         1
+     );
+     canvas.fillRect(pos_x+outline_size * 0.5,pos_y+outline_size *
+0.5,block_size-outline_size,block_size-outline_size);
+
+}
+
+# render erstellt die graphische Ausgabe des Spiels
+# wir setzten den Canvas auf schwarz
+# wir iterieren übers playfield und zeichnen alle statischen Elemente
+# wir zeichnen den übergebenden Tetriomino, der sich in jedem Durchlauf bewegt
+function render(playfield, tetromino) {
+     # Füllfarbe auf schwarz setzen und canvas löschen
+     canvas.setFillColor(1,1,1);
+     canvas.clear();
+     
+     grid(playfield);
+
+
+     for var row in 0:playfield.size() do {
+         for var column in 0:playfield[0].size() do {
+            if (playfield[row][column] != 0) then
+                draw_block(column, row, playfield[row][column]);
+        }
+     }
+     
+     wait(50000);
+
+     # mit der shape Variable erhalten wir die blockmap für den entsprechenden Tetromino
+     var blockmap = tetrominos[tetromino.shape][tetromino.rotation];
+     # wir iterieren durch die blockmap und zeichnen den Tetromino
+     for var row in 0:blockmap.size() do {
+         for var column in 0:blockmap[row].size() do {
+            if (blockmap[row][column] != 0) then
+                draw_block(tetromino.column + column, tetromino.row + row, blockmap[row][column]);
+        }
+     }
+}
+
+function illustrator(playfield, tetromino) {
+     # Füllfarbe auf schwarz setzen und canvas löschen
+     canvas.setFillColor(1,1,1);
+     canvas.clear();
+     
+     grid(playfield);
+
+
+     for var row in 0:playfield.size() do {
+         for var column in 0:playfield[0].size() do {
+            if (playfield[row][column] != 0) then
+                draw_block(column, row, playfield[row][column]);
+        }
+     }
+     
+     draw_blockmap(tetromino);
+    
+#     wait(50000);
+
+     # mit der shape Variable erhalten wir die blockmap für den entsprechenden Tetromino
+     var blockmap = tetrominos[tetromino.shape][tetromino.rotation];
+     # wir iterieren durch die blockmap und zeichnen den Tetromino
+     for var row in 0:blockmap.size() do {
+         for var column in 0:blockmap[row].size() do {
+            if (blockmap[row][column] != 0) then
+                draw_block(tetromino.column + column, tetromino.row + row, blockmap[row][column]);
+                wait(100);
+        }
+     }
+}
+
+function draw_blockmap(tetromino) {
+	var blockmap = tetrominos[tetromino.shape][tetromino.rotation];
+	canvas.setLineColor(1,0,0,1);
+	canvas.setLineWidth(5);
+	
+	print("tetromino.row = " + tetromino.row);
+	print("tetromino.column = " + tetromino.column);
+	
+	for var row in 0:blockmap.size()+1 do {
+		canvas.line(tetromino.column * block_size, tetromino.row * block_size + row * block_size, 
+			tetromino.column * block_size + blockmap[0].size() * block_size, tetromino.row * block_size + row * block_size);
+	}
+	for var column in 0:blockmap[0].size()+1 do {
+		canvas.line(tetromino.column * block_size + column * block_size, tetromino.row * block_size, 
+			tetromino.column * block_size + column * block_size, tetromino.row * block_size + blockmap.size() * block_size);
+	}
+	
+#	wait(1000);
+	
+	for var row in 0:blockmap.size() do {
+         for var column in 0:blockmap[row].size() do {
+             canvas.text((tetromino.column + column) * block_size + block_size/2 - fontsize/2, 
+             	(tetromino.row + row) * block_size + block_size/2 - fontsize/2, String(blockmap[row][column]));
+             wait(100);
+        }
+    }
+    canvas.setLineWidth(1);
+}
+
+function collision_illustrator(playfield, tetromino) {
+    var blockmap = tetrominos[tetromino.shape][tetromino.rotation];
+    
+     # Füllfarbe auf schwarz setzen und canvas löschen
+     canvas.setFillColor(1,1,1);
+     canvas.clear();
+     
+     grid(playfield);
+
+	canvas.setFillColor(0,0,0,1);
+
+     for var row in 0:playfield.size() do {
+         for var column in 0:playfield[0].size() do {
+         	print(String(playfield[row][column]));
+         	canvas.text(column * block_size + block_size/2 - fontsize/2, 
+             	row * block_size + block_size/2 - fontsize/2, String(playfield[row][column]));
+        }
+     }
+     
+     wait(10000);
+     
+     draw_blockmap(tetromino);
+    
+	# wir iterieren durch die blockmap um die Position des dynamischen 
+	# Tetrominos mit den statischen Elementen des playfields abzugleichen
+    for var row in 0:blockmap.size() do {
+        for var column in 0:blockmap[row].size() do {
+            if blockmap[row][column] != 0 then
+                if playfield[tetromino.row + row][tetromino.column + column] != 0 then return true;
+        }
+    }
+    return false;
+}
+
+
+
+class Tetromino {
+    public:
+        var column = 3;
+        var row = 5;
+        var rotation = 0;
+        var shape;
+
+        constructor(shape_) {
+            shape = shape_;
+        }
+}
+
+function grid(playfield) {
+	canvas.setLineColor(0,0,0,1);
+	for var row in 0:playfield.size() do {
+		canvas.line(0, row * block_size, playfield[0].size() * block_size, row * block_size);		
+	}
+	for var column in 0:playfield[0].size() do {
+		canvas.line(column * block_size, 0, column * block_size, playfield.size() * block_size);
+	}
+}
+
+function check_collision(playfield, tetromino) {
+    var blockmap = tetrominos[tetromino.shape][tetromino.rotation];
+    
+	# wir iterieren durch die blockmap um die Position des dynamischen 
+	# Tetrominos mit den statischen Elementen des playfields abzugleichen
+    for var row in 0:blockmap.size() do {
+        for var column in 0:blockmap[row].size() do {
+            if blockmap[row][column] != 0 then
+                if playfield[tetromino.row + row][tetromino.column + column] != 0 then return true;
+        }
+    }
+    return false;
+}
+
+function insert_tetromino(playfield, tetromino) {
+    var blockmap = tetrominos[tetromino.shape][tetromino.rotation];
+    
+     # wir iterieren durch die blockmap um den Tetromino 
+     # in die entsprechenden playfield Stellen zu platzieren
+     for var row in 0:blockmap.size() do {
+         for var column in 0:blockmap[row].size() do {
+            if blockmap[row][column] != 0 then {
+                playfield[tetromino.row + row][tetromino.column + column] = blockmap[row][column];
+            }
+        }
+    }
+}
+
+# Klasse, die den Pool an verfügbaren Tetrominos enthält
+# alle verfügbaren Tetrominos werden zufällig im Array platziert 
+# und dann nach und nach entfernt bis das Array leer ist
+class Tetromino_Pool {
+    public:
+        var pool = [];
+
+        function get() {
+            if this.pool.size() == 0 then {
+                print("pool is empty");
+                this.fill_pool();
+                print(this.pool);
+            }
+            return this.pool.pop();
+        }
+
+        function fill_pool() {
+        	# verfügbare Tetrominos
+            var pool_ = ["o", "s", "z", "i", "l", "j"];
+
+            while pool_.size() > 0 do {
+                var random_index = Integer(math.random()*pool_.size());
+                this.pool.push(pool_[random_index]);
+                pool_.remove(random_index);
+            }
+        }
+}
+
+var pool = Tetromino_Pool();
+
+var current_tetromino = Tetromino(pool.get());
+
+while true do {
+     illustrator(playfield, current_tetromino);
+
+     # wir "bewegen" den Block, indem wir ihn im
+     # nächsten Durchlauf tiefer zeichnen, d.h.
+     # wir verändern die y-Koordinate
+     current_tetromino.row += 1;
+
+     if check_collision(playfield, current_tetromino) == true then {
+     	 collision_illustrator(playfield, current_tetromino);
+     	 print("COLLISION DETECTED!!");
+     	 wait(10000);
+         current_tetromino.row -= 1;
+         insert_tetromino(playfield, current_tetromino);
+         current_tetromino = Tetromino(pool.get());
+     }
+
+     # für eine Bewegung brauchen wir
+     # canvas löschen -> den Block malen -> warten
+     wait(100);
+}
+
+
+## TODO ##
+  # Zufälliger nächster Tetromino
+  # Code sortieren und aufteilen
+
+  # seitliches bewegen des Blockes
+  # Spielanzeige für den nächsten Block
+  # Volle Reihe wird gelöscht
