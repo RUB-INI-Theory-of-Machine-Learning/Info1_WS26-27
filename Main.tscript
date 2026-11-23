@@ -21,7 +21,7 @@ while true do {
 
      if playfield.check_collision(current_tetromino) == true then {
          current_tetromino.row -= 1;
-         playfield.insert_tetromino(playfield, current_tetromino);
+         playfield.insert_tetromino(current_tetromino);
          current_tetromino = Tetromino(pool.get());
      }
 
