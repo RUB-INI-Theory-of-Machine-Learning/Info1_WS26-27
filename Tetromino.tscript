@@ -12,4 +12,47 @@ class Tetromino {
         function blockmap() {
             return tetrominos[this.shape][this.rotation];
         }
+
+		# speichert den Zustand des Tetromino
+		function save_state() {
+                this.previous_state = {
+                        "column": this.column,
+                        "row": this.row,
+                        "rotation": this.rotation
+                };
+         }
+
+		 # stellt den gespeicherten Zustand wieder her
+         function undo() {
+                this.column = previous_state["column"];
+                this.row = previous_state["row"];
+                this.rotation = previous_state["rotation"];
+         }
+
+		 # jede Bewegung speichert erst den Zustand 
+		 # und verändert dann den Zustand
+         function move_right() {
+                this.save_state();
+                this.column += 1;
+         }
+
+         function move_left() {
+                this.save_state();
+                this.column -= 1;
+         }
+
+         function move_down() {
+                this.save_state();
+                this.row += 1;
+         }
+
+         function rotate_right() {
+                this.save_state();
+                this.rotation = (this.rotation + 1) % this.max_rotations;
+         }
+
+         function rotate_left() {
+                this.save_state();
+                this.rotation = (this.rotation - 1) % this.max_rotations;
+		 }
 }

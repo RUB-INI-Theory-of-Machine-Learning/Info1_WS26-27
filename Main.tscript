@@ -1,9 +1,18 @@
+## TODO ##
+          # Volle Reihe wird gelöscht
+          # Punkte anzeigen und berechnen
+          # Level einführen und Spielgeschwindigkeit erhöhen
+          # Spielanzeige für den nächsten Block
+          # Schönere Ausgabe
+          # Performanceoptimierung
+          # Highscore
+
 # alle Files einfügen 
-include "Assets";
+include "TetrominoAufbau";
 include "Tetromino";
 include "TetrominoPool";
 include "Playfield";
-include "Renderer";
+include "Graphics";
 
 # wir initalisieren unsere Klassen
 var pool = Tetromino_Pool();
@@ -11,29 +20,54 @@ var current_tetromino = Tetromino(pool.get());
 var renderer = Renderer();
 var playfield = Playfield();
 
-while true do {
-     renderer.render(playfield, current_tetromino);
+# aktuelle Zeit
+var previous_time = time();
+# Zeitinterval nachdem wieder gezeichnet wird 
+# Bestimmt die Fallgeschwindigkeit
+var refresh_interval = 100;
+# Variable um zu kontrollieren ob ein Block direkt 
+# beim spawnen kollidiert und das Spiel endet
+var just_spawned = true;
 
-     # wir "bewegen" den Block, indem wir ihn im
-     # nächsten Durchlauf tiefer zeichnen, d.h.
-     # wir verändern die y-Koordinate
-     current_tetromino.row += 1;
+# das "timer" event wird alle 20 Millisekunden aufgerufen
+setEventHandler("timer", function(event) {
+        if time() - previous_time > refresh_interval then {
+             previous_time = time();
+             renderer.render(playfield, current_tetromino);
 
+             # Tetromino nach unten bewegen
+             current_tetromino.move_down();
+
+             if playfield.check_collision(current_tetromino) == true then {
+				 # falls der Tetromino neu ist und direkt kollidiert
+				 # das Spiel beenden
+                 if just_spawned == true then quitEventMode();
+                 current_tetromino.undo();
+                 playfield.insert_tetromino(current_tetromino);
+                 current_tetromino = Tetromino(pool.get());
+                 just_spawned = true;
+             }
+             else {
+                just_spawned = false;
+             }
+        }
+});
+
+# "canvas.keydown" wird aufgerufen wenn ein Knopf auf der Tastatur gedrückt wird
+setEventHandler("canvas.keydown", function(event) {
+     print(event.key);          # prints the key that was pressed
+     if event.key == "ArrowRight" then current_tetromino.move_right();
+     if event.key == "ArrowLeft" then current_tetromino.move_left();
+     if event.key == "ArrowDown" then current_tetromino.rotate_right();
+     if event.key == "ArrowUp" then current_tetromino.rotate_left();
+
+	 # falls der Tetromino eine nicht zulässige Bewegung ausführt
+	 # vorherigen Zustand wiederherstellen und die Bewegung rückgangig machen
      if playfield.check_collision(current_tetromino) == true then {
-         current_tetromino.row -= 1;
-         playfield.insert_tetromino(current_tetromino);
-         current_tetromino = Tetromino(pool.get());
+        current_tetromino.undo();
      }
 
-     # für eine Bewegung brauchen wir
-     # canvas löschen -> den Block malen -> warten
-     wait(100);
-}
+     renderer.render(playfield, current_tetromino);
+});
 
-## TODO ##
-  # Zufälliger nächster Tetromino
-  # Code sortieren und aufteilen
-
-  # seitliches bewegen des Blockes
-  # Spielanzeige für den nächsten Block
-  # Volle Reihe wird gelöscht
+enterEventMode();
